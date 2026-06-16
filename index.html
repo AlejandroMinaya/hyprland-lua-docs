@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hyprland hl.* Lua API Reference</title>
+<style>
+  :root { --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #c9d1d9; --text-muted: #8b949e; --accent: #58a6ff; --accent-green: #3fb950; --accent-orange: #d29922; --accent-red: #f85149; --accent-purple: #bc8cff; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans',Helvetica,Arial,sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .container { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+
+  header { border-bottom: 1px solid var(--border); padding: 32px 0 24px; margin-bottom: 32px; }
+  header h1 { font-size: 2rem; font-weight: 600; }
+  header p { color: var(--text-muted); margin-top: 8px; font-size: 1rem; }
+  header .badge { display: inline-block; background: var(--accent); color: #fff; padding: 2px 10px; border-radius: 12px; font-size: .75rem; font-weight: 500; margin-left: 8px; vertical-align: middle; }
+
+  nav.toc { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin-bottom: 32px; }
+  nav.toc h2 { font-size: .9rem; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 12px; }
+  nav.toc ol { columns: 2 400px; column-gap: 32px; list-style: none; counter-reset: toc; }
+  nav.toc ol li { break-inside: avoid; counter-increment: toc; margin: 2px 0; }
+  nav.toc ol li a { color: var(--accent); text-decoration: none; font-size: .88rem; display: block; padding: 3px 0; }
+  nav.toc ol li a::before { content: counter(toc) ". "; color: var(--text-muted); font-size: .8rem; }
+  nav.toc ol li a:hover { text-decoration: underline; }
+
+  section { margin-bottom: 40px; }
+  section h2 { font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  section h2 .section-num { color: var(--text-muted); font-size: 1rem; }
+  section h3 { font-size: 1.15rem; margin: 20px 0 8px; color: var(--accent); }
+  section h4 { font-size: 1rem; margin: 16px 0 6px; color: var(--accent-green); }
+
+  .fn { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+  .fn .sig { font-family: 'SF Mono','JetBrains Mono',monospace; font-size: .92rem; color: var(--accent-orange); margin-bottom: 6px; }
+  .fn .sig .param { color: var(--accent-green); }
+  .fn .sig .optional { color: var(--text-muted); font-style: italic; }
+  .fn p { margin: 4px 0; font-size: .9rem; }
+  .fn .note { color: var(--text-muted); font-size: .85rem; margin-top: 4px; }
+
+  .props { width: 100%; border-collapse: collapse; margin: 8px 0; font-size: .88rem; }
+  .props th { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 500; font-size: .8rem; text-transform: uppercase; letter-spacing: .3px; }
+  .props td { padding: 5px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .props td:first-child { font-family: 'SF Mono','JetBrains Mono',monospace; color: var(--accent-green); white-space: nowrap; }
+  .props td:nth-child(2) { color: var(--accent-purple); white-space: nowrap; }
+  .props tr:last-child td { border-bottom: none; }
+
+  pre { background: #010409; border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; overflow-x: auto; font-size: .85rem; line-height: 1.45; margin: 10px 0; font-family: 'SF Mono','JetBrains Mono',monospace; }
+  code { font-family: 'SF Mono','JetBrains Mono',monospace; font-size: .85rem; background: rgba(88,166,255,.1); padding: 1px 5px; border-radius: 3px; color: var(--accent); }
+  pre code { background: none; padding: 0; color: var(--text); }
+  .kw { color: var(--accent-red); }
+  .str { color: var(--accent-green); }
+  .cm { color: var(--text-muted); font-style: italic; }
+  .fn-name { color: var(--accent-orange); }
+  .const { color: var(--accent-purple); }
+
+  .subsections { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 8px; margin: 10px 0; }
+  .subsections a { display: block; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 14px; color: var(--accent); text-decoration: none; font-family: 'SF Mono','JetBrains Mono',monospace; font-size: .85rem; }
+  .subsections a:hover { border-color: var(--accent); }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+  footer { border-top: 1px solid var(--border); padding: 24px 0 48px; color: var(--text-muted); font-size: .85rem; text-align: center; }
+
+  @media (max-width: 640px) {
+    nav.toc ol { columns: 1; }
+    .container { padding: 0 16px; }
+    header h1 { font-size: 1.5rem; }
+    .props td:first-child { white-space: normal; word-break: break-all; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Hyprland <code style="font-size:inherit;background:none;color:var(--accent-orange)">hl.*</code> Lua API <span class="badge">Source of Truth</span></h1>
+  <p>Complete reference for the <code>hl</code> global table exposed by Hyprland's Lua configuration system. Config file: <code>~/.config/hypr/hyprland.lua</code> (since Hyprland 0.55).</p>
+</header>
+
+<nav class="toc">
+  <h2>Sections</h2>
+  <ol>
+    <li><a href="#s1">Configuration</a></li>
+    <li><a href="#s2">Monitor Setup</a></li>
+    <li><a href="#s3">Window Rules</a></li>
+    <li><a href="#s4">Layer Rules</a></li>
+    <li><a href="#s5">Workspace Rules</a></li>
+    <li><a href="#s6">Keybinds</a></li>
+    <li><a href="#s7">Dispatchers</a></li>
+    <li><a href="#s8">Query Functions</a></li>
+    <li><a href="#s9">Event System</a></li>
+    <li><a href="#s10">Utility Functions</a></li>
+    <li><a href="#s11">Notifications</a></li>
+    <li><a href="#s12">Timers</a></li>
+    <li><a href="#s13">Animations &amp; Curves</a></li>
+    <li><a href="#s14">Devices</a></li>
+    <li><a href="#s15">Permissions</a></li>
+    <li><a href="#s16">Gestures</a></li>
+    <li><a href="#s17">Plugins</a></li>
+    <li><a href="#s18">Custom Layouts</a></li>
+    <li><a href="#s19">Object Types</a></li>
+  </ol>
+</nav>
+
+<!-- ======================================================================== -->
+<section id="s1">
+<h2><span class="section-num">1</span> Configuration &mdash; <code>hl.config()</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.config({ <span class="param">settings</span> })</div>
+  <p>Set Hyprland configuration values. The argument is a nested table mirroring the old <code>hyprland.conf</code> variable groups.</p>
+  <p class="note">All config keys from <code>general</code>, <code>decoration</code>, <code>input</code>, <code>gestures</code>, <code>group</code>, <code>binds</code>, <code>debug</code>, <code>misc</code>, <code>dwindle</code>, <code>master</code>, <code>scrolling</code>, <code>ecosystem</code>, etc. are available.</p>
+</div>
+
+<pre><code><span class="cm">-- Example</span>
+hl.config({
+  general = {
+    gaps_in        = 5,
+    gaps_out       = 10,
+    border_size    = 2,
+    <span class="str">"col.active_border"</span>   = <span class="str">"rgba(ffffffcc) rgba(111111cc) 45deg"</span>,
+    <span class="str">"col.inactive_border"</span> = <span class="str">"rgba(595959aa)"</span>,
+    layout = <span class="str">"dwindle"</span>,
+  },
+  decoration = {
+    rounding = 10, active_opacity = 1.0, inactive_opacity = 1.0,
+    shadow = { enabled = <span class="kw">true</span>, range = 4, color = <span class="str">"rgba(1a1a1aee)"</span> },
+    blur   = { enabled = <span class="kw">true</span>, size = 3, passes = 1 },
+  },
+  input = { kb_layout = <span class="str">"us"</span>, follow_mouse = 1, touchpad = { natural_scroll = <span class="kw">false</span> } },
+  misc  = { disable_autoreload = <span class="kw">true</span>, disable_hyprland_logo = <span class="kw">true</span>, vfr = <span class="kw">true</span> },
+})</code></pre>
+
+<div class="fn">
+  <div class="sig">hl.get_config(<span class="param">key</span>) &rarr; <span class="param">value</span></div>
+  <p>Read the current value of a config key. Returns <code>nil + error_msg</code> if the key is unknown.</p>
+</div>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s2">
+<h2><span class="section-num">2</span> Monitor Setup &mdash; <code>hl.monitor()</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.monitor({ <span class="param">fields</span> })</div>
+  <p>Define or override a monitor configuration. The <code>output</code> field is required. Multiple calls are cumulative.</p>
+</div>
+
+<table class="props">
+  <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+  <tr><td>output</td><td>string</td><td>Monitor name, e.g. <code>"DP-1"</code>, <code>"eDP-1"</code></td></tr>
+  <tr><td>mode</td><td>string</td><td>Resolution &amp; refresh, e.g. <code>"1920x1080@144"</code>, <code>"preferred"</code>, <code>"highres"</code>, <code>"highrr"</code></td></tr>
+  <tr><td>position</td><td>string</td><td>Layout position, e.g. <code>"0x0"</code>, <code>"auto-right"</code>, <code>"auto-left"</code></td></tr>
+  <tr><td>scale</td><td>number/string</td><td>Scale factor, e.g. <code>1.0</code>, <code>"auto"</code></td></tr>
+  <tr><td>transform</td><td>int (0-7)</td><td>Display transform (0=normal, 1=90&deg;, 2=180&deg;, 3=270&deg;, 4-7=flipped variants)</td></tr>
+  <tr><td>mirror</td><td>string</td><td>Output name to mirror, or empty string</td></tr>
+  <tr><td>bitdepth</td><td>int</td><td>8 or 10</td></tr>
+  <tr><td>cm</td><td>string</td><td>Color management, e.g. <code>"srgb"</code> (default) or <code>"passthrough"</code></td></tr>
+  <tr><td>vrr</td><td>int (-1 to 3)</td><td>Variable refresh rate: -1=unset, 0=off, 1=on, 2=always, 3=fullscreen</td></tr>
+  <tr><td>disabled</td><td>bool</td><td><code>true</code> to disable this output</td></tr>
+  <tr><td>reserved / reserved_area</td><td>table</td><td><code>{ top, bottom, left, right }</code> in CSS gap format</td></tr>
+  <tr><td>icc</td><td>string</td><td>Path to ICC color profile</td></tr>
+  <tr><td>sdr_eotf</td><td>string</td><td>SDR electro-optical transfer function</td></tr>
+  <tr><td>sdrbrightness</td><td>float</td><td>SDR brightness (default 1.0)</td></tr>
+  <tr><td>sdrsaturation</td><td>float</td><td>SDR saturation (default 1.0)</td></tr>
+  <tr><td>supports_wide_color</td><td>int (-1/0/1)</td><td>Override wide color support detection</td></tr>
+  <tr><td>supports_hdr</td><td>int (-1/0/1)</td><td>Override HDR support detection</td></tr>
+  <tr><td>sdr_min_luminance</td><td>float</td><td>Min SDR luminance (default 0.2)</td></tr>
+  <tr><td>sdr_max_luminance</td><td>int</td><td>Max SDR luminance (default 80)</td></tr>
+  <tr><td>min_luminance</td><td>float</td><td>Min luminance (default -1 = auto)</td></tr>
+  <tr><td>max_luminance</td><td>int</td><td>Max luminance (default -1 = auto)</td></tr>
+  <tr><td>max_avg_luminance</td><td>int</td><td>Max average luminance (default -1 = auto)</td></tr>
+</table>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s3">
+<h2><span class="section-num">3</span> Window Rules &mdash; <code>hl.window_rule()</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.window_rule({ <span class="param">name</span>?, <span class="param">enabled</span>?, <span class="param">match</span>?, ...effects }) &rarr; <span class="param">rule_handle</span></div>
+  <p>Define a window rule. Named rules can be updated by calling <code>hl.window_rule()</code> again with the same name. Returns a handle with <code>:set_enabled(bool)</code>.</p>
+</div>
+
+<h3>Match criteria (inside <code>match = { ... }</code>)</h3>
+<table class="props">
+  <tr><th>Key</th><th>Type</th><th>Description</th></tr>
+  <tr><td>class</td><td>string</td><td>Window class regex</td></tr>
+  <tr><td>title</td><td>string</td><td>Window title regex</td></tr>
+  <tr><td>initialClass</td><td>string</td><td>Class at creation time</td></tr>
+  <tr><td>initialTitle</td><td>string</td><td>Title at creation time</td></tr>
+  <tr><td>tag</td><td>string</td><td>Tag regex</td></tr>
+  <tr><td>pid</td><td>number</td><td>Process ID</td></tr>
+  <tr><td>address</td><td>string</td><td>Window address (hex)</td></tr>
+  <tr><td>xwayland</td><td>bool</td><td>XWayland window</td></tr>
+  <tr><td>float</td><td>bool</td><td>Floating state</td></tr>
+  <tr><td>fullscreen</td><td>bool</td><td>Fullscreen state</td></tr>
+  <tr><td>pin</td><td>bool</td><td>Pinned state</td></tr>
+  <tr><td>workspace</td><td>string</td><td>Workspace selector</td></tr>
+  <tr><td>monitor</td><td>string</td><td>Monitor selector</td></tr>
+  <tr><td>grouped</td><td>bool</td><td>In a group</td></tr>
+  <tr><td>swallowing</td><td>bool</td><td>Swallowing state</td></tr>
+</table>
+
+<h3>Static effects (as top-level fields)</h3>
+<table class="props">
+  <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+  <tr><td>float</td><td>bool</td><td>Force floating</td></tr>
+  <tr><td>tile</td><td>bool</td><td>Force tiling</td></tr>
+  <tr><td>fullscreen</td><td>bool</td><td>Force fullscreen</td></tr>
+  <tr><td>maximize</td><td>bool</td><td>Force maximize</td></tr>
+  <tr><td>center</td><td>bool</td><td>Center on screen</td></tr>
+  <tr><td>pseudo</td><td>bool</td><td>Pseudo-tile</td></tr>
+  <tr><td>pin</td><td>bool</td><td>Pin window</td></tr>
+  <tr><td>no_initial_focus</td><td>bool</td><td>Don't focus on open</td></tr>
+  <tr><td>fullscreen_state</td><td>string</td><td>Override fullscreen state string</td></tr>
+  <tr><td>move</td><td>string</td><td>Position expression e.g. <code>"100 200"</code> or <code>"100 monitor_w-100"</code></td></tr>
+  <tr><td>size</td><td>string</td><td>Size expression e.g. <code>"500x500"</code> or <code>"50% 50%"</code></td></tr>
+  <tr><td>monitor</td><td>string</td><td>Move to monitor</td></tr>
+  <tr><td>workspace</td><td>string</td><td>Move to workspace</td></tr>
+  <tr><td>group</td><td>string</td><td><code>"set"</code>, <code>"unset"</code>, <code>"toggle"</code></td></tr>
+  <tr><td>suppress_event</td><td>string</td><td>Suppress events (e.g. <code>"maximize"</code>)</td></tr>
+  <tr><td>rounding</td><td>int (0-20)</td><td>Set rounding</td></tr>
+  <tr><td>border_size</td><td>int</td><td>Set border size</td></tr>
+  <tr><td>rounding_power</td><td>float (1-10)</td><td>Rounding power</td></tr>
+  <tr><td>scroll_mouse</td><td>float (0.01-10)</td><td>Mouse scroll speed multiplier</td></tr>
+  <tr><td>scroll_touchpad</td><td>float (0.01-10)</td><td>Touchpad scroll speed multiplier</td></tr>
+  <tr><td>animation</td><td>string</td><td>Animation style name</td></tr>
+  <tr><td>idle_inhibit</td><td>string</td><td><code>"none"</code>, <code>"always"</code>, <code>"focus"</code>, <code>"fullscreen"</code></td></tr>
+  <tr><td>opacity</td><td>string</td><td>Opacity override e.g. <code>"0.9"</code> or <code>"0.9 0.8"</code></td></tr>
+  <tr><td>tag</td><td>string</td><td>Assign a tag</td></tr>
+  <tr><td>max_size</td><td>string</td><td>Max size expression <code>"WxH"</code></td></tr>
+  <tr><td>min_size</td><td>string</td><td>Min size expression <code>"WxH"</code></td></tr>
+  <tr><td>border_color</td><td>string/gradient</td><td>Border color/gradient override</td></tr>
+  <tr><td>persistent_size</td><td>bool</td><td>Remember size across state changes</td></tr>
+  <tr><td>allows_input</td><td>bool</td><td>Allow input to window</td></tr>
+  <tr><td>dim_around</td><td>bool</td><td>Dim area around window</td></tr>
+  <tr><td>decorate</td><td>bool (default true)</td><td>Show decorations</td></tr>
+  <tr><td>focus_on_activate</td><td>bool</td><td>Focus when activated</td></tr>
+  <tr><td>keep_aspect_ratio</td><td>bool</td><td>Maintain aspect ratio</td></tr>
+  <tr><td>nearest_neighbor</td><td>bool</td><td>Nearest-neighbor scaling</td></tr>
+  <tr><td>no_anim</td><td>bool</td><td>Disable animations</td></tr>
+  <tr><td>no_blur</td><td>bool</td><td>Disable blur</td></tr>
+  <tr><td>no_dim</td><td>bool</td><td>Disable dim</td></tr>
+  <tr><td>no_focus</td><td>bool</td><td>Don't focus automatically</td></tr>
+  <tr><td>no_follow_mouse</td><td>bool</td><td>Don't follow mouse focus</td></tr>
+  <tr><td>no_max_size</td><td>bool</td><td>Ignore max size hints</td></tr>
+  <tr><td>no_shadow</td><td>bool</td><td>Disable shadows</td></tr>
+  <tr><td>no_shortcuts_inhibit</td><td>bool</td><td>Don't allow shortcuts inhibit</td></tr>
+  <tr><td>opaque</td><td>bool</td><td>Force opaque</td></tr>
+  <tr><td>force_rgbx</td><td>bool</td><td>Force RGBX format</td></tr>
+  <tr><td>sync_fullscreen</td><td>bool</td><td>Synchronize fullscreen states</td></tr>
+  <tr><td>immediate</td><td>bool</td><td>Render immediately (tearing)</td></tr>
+  <tr><td>xray</td><td>bool</td><td>X-ray mode (pass-through blur)</td></tr>
+  <tr><td>render_unfocused</td><td>bool</td><td>Render even when unfocused</td></tr>
+  <tr><td>no_screen_share</td><td>bool</td><td>Block screen sharing</td></tr>
+  <tr><td>no_vrr</td><td>bool</td><td>Disable VRR for this window</td></tr>
+  <tr><td>no_auto_hdr</td><td>bool</td><td>Disable auto HDR</td></tr>
+  <tr><td>stay_focused</td><td>bool</td><td>Keep focus on this window</td></tr>
+  <tr><td>confine_pointer</td><td>bool</td><td>Confine pointer to window</td></tr>
+  <tr><td>tonemap</td><td>string</td><td>Tone mapping mode</td></tr>
+</table>
+
+<pre><code><span class="cm">-- Named rules can be toggled at runtime:</span>
+local rule = hl.window_rule({ name = <span class="str">"float-kitty"</span>, match = { class = <span class="str">"kitty"</span> }, float = <span class="kw">true</span> })
+<span class="cm">-- rule:set_enabled(false)</span></code></pre>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s4">
+<h2><span class="section-num">4</span> Layer Rules &mdash; <code>hl.layer_rule()</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.layer_rule({ <span class="param">name</span>?, <span class="param">enabled</span>?, <span class="param">match</span>?, ...effects }) &rarr; <span class="param">rule_handle</span></div>
+  <p>Define a layer surface rule. Match on <code>namespace</code> (regex) in the match table.</p>
+</div>
+
+<table class="props">
+  <tr><th>Effect</th><th>Type</th><th>Description</th></tr>
+  <tr><td>no_anim</td><td>bool</td><td>Disable animation</td></tr>
+  <tr><td>blur</td><td>bool</td><td>Enable blur</td></tr>
+  <tr><td>blur_popups</td><td>bool</td><td>Blur popups</td></tr>
+  <tr><td>ignore_alpha</td><td>float (0-1)</td><td>Alpha threshold to ignore</td></tr>
+  <tr><td>dim_around</td><td>bool</td><td>Dim around layer</td></tr>
+  <tr><td>xray</td><td>bool</td><td>X-ray pass-through</td></tr>
+  <tr><td>animation</td><td>string</td><td>Animation style</td></tr>
+  <tr><td>order</td><td>int</td><td>Render order override</td></tr>
+  <tr><td>above_lock</td><td>int (0-2)</td><td>Render above lock screen</td></tr>
+  <tr><td>no_screen_share</td><td>bool</td><td>Block screen sharing</td></tr>
+</table>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s5">
+<h2><span class="section-num">5</span> Workspace Rules &mdash; <code>hl.workspace_rule()</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.workspace_rule({ <span class="param">workspace</span>, <span class="param">monitor</span>?, ...fields })</div>
+  <p>Assign workspace properties. The <code>workspace</code> field is a workspace selector string.</p>
+</div>
+
+<table class="props">
+  <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+  <tr><td>workspace</td><td>string</td><td>Workspace selector (e.g. <code>"1"</code>, <code>"name:code"</code>, <code>"special"</code>)</td></tr>
+  <tr><td>monitor</td><td>string</td><td>Assign workspace to monitor</td></tr>
+  <tr><td>default</td><td>bool</td><td>Mark as default on its monitor</td></tr>
+  <tr><td>persistent</td><td>bool</td><td>Keep workspace alive when empty</td></tr>
+  <tr><td>gaps_in</td><td>CSS gap</td><td>Inner gap override</td></tr>
+  <tr><td>gaps_out</td><td>CSS gap</td><td>Outer gap override</td></tr>
+  <tr><td>float_gaps</td><td>CSS gap</td><td>Floating window gap override</td></tr>
+  <tr><td>border_size</td><td>int</td><td>Border size override</td></tr>
+  <tr><td>no_border</td><td>bool</td><td>No borders</td></tr>
+  <tr><td>no_rounding</td><td>bool</td><td>No rounding</td></tr>
+  <tr><td>decorate</td><td>bool</td><td>Show decorations</td></tr>
+  <tr><td>no_shadow</td><td>bool</td><td>No shadows</td></tr>
+  <tr><td>on_created_empty</td><td>string</td><td>Command to run when empty workspace is created</td></tr>
+  <tr><td>default_name</td><td>string</td><td>Default name for the workspace</td></tr>
+  <tr><td>layout</td><td>string</td><td>Layout plugin name (<code>"dwindle"</code>, <code>"master"</code>, etc.)</td></tr>
+  <tr><td>animation</td><td>string</td><td>Animation style override</td></tr>
+  <tr><td>layout_opts</td><td>table</td><td>Layout-specific options (string-keyed table of string/bool/number)</td></tr>
+  <tr><td>enabled</td><td>bool</td><td>Enable/disable the rule</td></tr>
+</table>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s6">
+<h2><span class="section-num">6</span> Keybinds &mdash; <code>hl.bind()</code>, <code>hl.unbind()</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.bind(<span class="param">keys</span>, <span class="param">dispatcher</span>, <span class="param optional">opts</span>?) &rarr; <span class="param">keybind_handle</span></div>
+  <p>Register a keybind. <code>keys</code> is a modifier-key string like <code>"SUPER+SHIFT+Q"</code>. <code>dispatcher</code> is a closure from <code>hl.dsp.*</code> or a Lua function. Returns a handle with <code>:set_enabled(bool)</code>.</p>
+</div>
+
+<table class="props">
+  <tr><th>Opt field</th><th>Type</th><th>Description</th></tr>
+  <tr><td>repeating</td><td>bool</td><td>Fire repeatedly while held</td></tr>
+  <tr><td>locked</td><td>bool</td><td>Work when locked/inhibited</td></tr>
+  <tr><td>release</td><td>bool</td><td>Fire on key release</td></tr>
+  <tr><td>click</td><td>bool</td><td>Fire on mouse click release</td></tr>
+  <tr><td>drag</td><td>bool</td><td>Fire on mouse drag</td></tr>
+  <tr><td>non_consuming</td><td>bool</td><td>Event passes through to window</td></tr>
+  <tr><td>auto_consuming</td><td>bool</td><td>Auto-consume key event</td></tr>
+  <tr><td>transparent</td><td>bool</td><td>Transparent to other binds</td></tr>
+  <tr><td>ignore_mods</td><td>bool</td><td>Ignore modifiers for matching</td></tr>
+  <tr><td>dont_inhibit</td><td>bool</td><td>Don't allow inhibition</td></tr>
+  <tr><td>long_press</td><td>bool</td><td>Fire on long press</td></tr>
+  <tr><td>submap_universal</td><td>bool</td><td>Work in all submaps</td></tr>
+  <tr><td>description / desc</td><td>string</td><td>Human-readable description</td></tr>
+  <tr><td>device</td><td>table</td><td><code>{ inclusive = bool, list = { "dev1", "dev2" } }</code></td></tr>
+</table>
+
+<div class="fn">
+  <div class="sig">hl.unbind(<span class="param">keys</span>)</div>
+  <p>Remove a previously bound key. Pass <code>"all"</code> to clear all keybinds.</p>
+</div>
+
+<div class="fn">
+  <div class="sig">hl.define_submap(<span class="param">name</span>, <span class="param optional">reset</span>?, <span class="param">fn</span>)</div>
+  <p>Define a submap. Inside <code>fn</code>, calls to <code>hl.bind()</code> are scoped to this submap. The optional <code>reset</code> string determines reset behavior.</p>
+</div>
+
+<pre><code><span class="cm">-- Examples</span>
+hl.bind(<span class="str">"SUPER+Q"</span>, hl.dsp.exec_cmd(<span class="str">"kitty"</span>))
+hl.bind(<span class="str">"SUPER+F"</span>, hl.dsp.window.float({ action = <span class="str">"toggle"</span> }))
+hl.bind(<span class="str">"SUPER+SHIFT+left"</span>, hl.dsp.window.move({ direction = <span class="str">"left"</span> }))
+hl.bind(<span class="str">"SUPER+left"</span>, hl.dsp.focus({ direction = <span class="str">"left"</span> }))
+
+<span class="cm">-- With options</span>
+hl.bind(<span class="str">"XF86AudioRaiseVolume"</span>, hl.dsp.exec_cmd(<span class="str">"wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"</span>),
+        { locked = <span class="kw">true</span>, repeating = <span class="kw">true</span> })
+
+<span class="cm">-- Submap example</span>
+hl.define_submap(<span class="str">"resize"</span>, <span class="kw">function</span>()
+  hl.bind(<span class="str">"left"</span>,  hl.dsp.window.resize({ x = -10, y = 0 }))
+  hl.bind(<span class="str">"right"</span>, hl.dsp.window.resize({ x = 10, y = 0 }))
+  hl.bind(<span class="str">"Escape"</span>, hl.dsp.submap(<span class="str">"default"</span>))
+<span class="kw">end</span>)
+hl.bind(<span class="str">"SUPER+R"</span>, hl.dsp.submap(<span class="str">"resize"</span>))</code></pre>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s7">
+<h2><span class="section-num">7</span> Dispatchers &mdash; <code>hl.dsp.*</code></h2>
+<p class="note">All <code>hl.dsp.*</code> functions return <strong>dispatcher closures</strong> &mdash; they do <em>not</em> execute the action directly. Pass the result to <code>hl.bind()</code> or <code>hl.dispatch()</code>.</p>
+
+<h3>Top-level dispatchers</h3>
+<div class="fn">
+<table class="props">
+  <tr><th>Function</th><th>Description</th></tr>
+  <tr><td>hl.dsp.exec_cmd(cmd)</td><td>Spawn a shell command (applies window rules if available)</td></tr>
+  <tr><td>hl.dsp.exec_raw(cmd)</td><td>Spawn a command without shell quoting</td></tr>
+  <tr><td>hl.dsp.exit()</td><td>Exit the compositor</td></tr>
+  <tr><td>hl.dsp.submap(name)</td><td>Switch to a named submap (<code>"default"</code> to reset)</td></tr>
+  <tr><td>hl.dsp.pass({ window })</td><td>Pass keys through to a window</td></tr>
+  <tr><td>hl.dsp.send_shortcut({ mods, key, window? })</td><td>Inject a keyboard shortcut to a window</td></tr>
+  <tr><td>hl.dsp.send_key_state({ mods, key, state, window? })</td><td>Inject key state ("down"/"up"/"repeat")</td></tr>
+  <tr><td>hl.dsp.layout(msg)</td><td>Send a layout message</td></tr>
+  <tr><td>hl.dsp.dpms({ action?, monitor? })</td><td>Control DPMS ("toggle"/"on"/"off")</td></tr>
+  <tr><td>hl.dsp.event(msg)</td><td>Send an internal event</td></tr>
+  <tr><td>hl.dsp.global(msg)</td><td>Send a global shortcut</td></tr>
+  <tr><td>hl.dsp.force_renderer_reload()</td><td>Force renderer GL reload</td></tr>
+  <tr><td>hl.dsp.force_idle(timeout)</td><td>Force idle timeout in seconds</td></tr>
+  <tr><td>hl.dsp.focus({ ... })</td><td>Multi-modal focus (see below)</td></tr>
+  <tr><td>hl.dsp.no_op()</td><td>Do nothing (placeholder)</td></tr>
+</table>
+</div>
+
+<h3><code>hl.dsp.focus()</code> modes</h3>
+<div class="fn">
+<table class="props">
+  <tr><th>Mode</th><th>Example</th></tr>
+  <tr><td>Direction</td><td><code>{ direction = "left"|"right"|"up"|"down" }</code></td></tr>
+  <tr><td>Monitor</td><td><code>{ monitor = "DP-1"|"+"|"-"|"next"|"prev" }</code></td></tr>
+  <tr><td>Workspace</td><td><code>{ workspace = "3"|"name:chat", on_current_monitor? }</code></td></tr>
+  <tr><td>Window</td><td><code>{ window = "selector" }</code> &mdash; by address, class, title, or regex</td></tr>
+  <tr><td>Urgent/last</td><td><code>{ urgent_or_last = true }</code></td></tr>
+  <tr><td>Last</td><td><code>{ last = true }</code></td></tr>
+</table>
+</div>
+
+<h3><code>hl.dsp.window.*</code></h3>
+<div class="fn">
+<table class="props">
+  <tr><th>Function</th><th>Description</th></tr>
+  <tr><td>hl.dsp.window.close({ window? })</td><td>Close window</td></tr>
+  <tr><td>hl.dsp.window.kill({ window? })</td><td>Force-kill window</td></tr>
+  <tr><td>hl.dsp.window.signal({ signal, window? })</td><td>Send internal signal</td></tr>
+  <tr><td>hl.dsp.window.float({ action?, window? })</td><td>Toggle/enable/disable float</td></tr>
+  <tr><td>hl.dsp.window.fullscreen({ mode?, action?, window? })</td><td>Fullscreen (mode: "fullscreen"/"maximized", action: "toggle"/"set"/"unset")</td></tr>
+  <tr><td>hl.dsp.window.fullscreen_state({ internal, client, action?, window? })</td><td>Explicit fullscreen state</td></tr>
+  <tr><td>hl.dsp.window.pseudo({ action?, window? })</td><td>Pseudo-tile</td></tr>
+  <tr><td>hl.dsp.window.move({ ... })</td><td>Multi-modal move (see below)</td></tr>
+  <tr><td>hl.dsp.window.swap({ ... })</td><td>Swap windows (direction/target/next/prev)</td></tr>
+  <tr><td>hl.dsp.window.center({ window? })</td><td>Center window on screen</td></tr>
+  <tr><td>hl.dsp.window.cycle_next({ next?, tiled?, floating?, window? })</td><td>Cycle focus</td></tr>
+  <tr><td>hl.dsp.window.tag({ tag, window? })</td><td>Tag window</td></tr>
+  <tr><td>hl.dsp.window.clear_tags({ window? })</td><td>Clear all tags</td></tr>
+  <tr><td>hl.dsp.window.toggle_swallow()</td><td>Toggle swallow</td></tr>
+  <tr><td>hl.dsp.window.pin({ action?, window? })</td><td>Pin window</td></tr>
+  <tr><td>hl.dsp.window.bring_to_top()</td><td>Raise window</td></tr>
+  <tr><td>hl.dsp.window.alter_zorder({ mode, window? })</td><td>Change z-order ("top"/"bottom"/"up"/"down")</td></tr>
+  <tr><td>hl.dsp.window.set_prop({ prop, value, window? })</td><td>Set arbitrary window property</td></tr>
+  <tr><td>hl.dsp.window.deny_from_group({ action? })</td><td>Deny/allow from groups</td></tr>
+  <tr><td>hl.dsp.window.drag()</td><td>Start mouse drag to move</td></tr>
+  <tr><td>hl.dsp.window.resize({ ... })</td><td>Resize (by x/y or keep_aspect_ratio)</td></tr>
+</table>
+</div>
+
+<h4><code>hl.dsp.window.move()</code> modes</h4>
+<div class="fn">
+<table class="props">
+  <tr><th>Mode</th><th>Example</th></tr>
+  <tr><td>Direction</td><td><code>{ direction = "left"|"right"|"up"|"down", group_aware? }</code></td></tr>
+  <tr><td>Position</td><td><code>{ x = 100, y = 200, relative? = true }</code></td></tr>
+  <tr><td>Workspace</td><td><code>{ workspace = "3"|"special:magic", follow? }</code></td></tr>
+  <tr><td>Monitor</td><td><code>{ monitor = "DP-1"|"+"|"-", follow? }</code></td></tr>
+  <tr><td>Into group</td><td><code>{ into_group = "left"|"right"|"up"|"down" }</code></td></tr>
+  <tr><td>Into/create group</td><td><code>{ into_or_create_group = "left"|"right"|"up"|"down" }</code></td></tr>
+  <tr><td>Out of group</td><td><code>{ out_of_group = true }</code> or <code>{ out_of_group = "direction" }</code></td></tr>
+</table>
+</div>
+
+<h3><code>hl.dsp.workspace.*</code></h3>
+<div class="fn">
+<table class="props">
+  <tr><th>Function</th><th>Description</th></tr>
+  <tr><td>hl.dsp.workspace.rename({ workspace, name? })</td><td>Rename workspace</td></tr>
+  <tr><td>hl.dsp.workspace.move({ workspace?, monitor })</td><td>Move workspace (or current) to a monitor</td></tr>
+  <tr><td>hl.dsp.workspace.swap_monitors({ monitor1, monitor2 })</td><td>Swap active workspaces between monitors</td></tr>
+  <tr><td>hl.dsp.workspace.toggle_special(name?)</td><td>Toggle special (scratchpad) workspace</td></tr>
+</table>
+</div>
+
+<h3><code>hl.dsp.group.*</code></h3>
+<div class="fn">
+<table class="props">
+  <tr><th>Function</th><th>Description</th></tr>
+  <tr><td>hl.dsp.group.toggle({ window? })</td><td>Toggle window group</td></tr>
+  <tr><td>hl.dsp.group.next({ window? })</td><td>Next group member</td></tr>
+  <tr><td>hl.dsp.group.prev({ window? })</td><td>Previous group member</td></tr>
+  <tr><td>hl.dsp.group.active({ index, window? })</td><td>Set active tab by index</td></tr>
+  <tr><td>hl.dsp.group.move_window({ forward? })</td><td>Move window within group</td></tr>
+  <tr><td>hl.dsp.group.lock({ action? })</td><td>Lock/unlock all groups</td></tr>
+  <tr><td>hl.dsp.group.lock_active({ action? })</td><td>Lock/unlock active group</td></tr>
+</table>
+</div>
+
+<h3><code>hl.dsp.cursor.*</code></h3>
+<div class="fn">
+<table class="props">
+  <tr><th>Function</th><th>Description</th></tr>
+  <tr><td>hl.dsp.cursor.move_to_corner({ corner=1-4, window? })</td><td>Move cursor to window corner</td></tr>
+  <tr><td>hl.dsp.cursor.move({ x, y })</td><td>Move cursor by offset</td></tr>
+</table>
+</div>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s8">
+<h2><span class="section-num">8</span> Query Functions &mdash; <code>hl.get_*()</code></h2>
+
+<h3>Windows</h3>
+<div class="fn">
+<table class="props">
+  <tr><th>Function</th><th>Returns</th><th>Description</th></tr>
+  <tr><td>hl.get_windows({ filters? })</td><td>{ HL.Window, ... }</td><td>All windows matching filters: <code>monitor</code>, <code>workspace</code>, <code>floating</code>, <code>mapped</code>, <code>class</code>, <code>title</code>, <code>tag</code>. Defaults to mapped windows.</td></tr>
+  <tr><td>hl.get_window(selector)</td><td>HL.Window | nil</td><td>Single window by address, title, class, regex, or object</td></tr>
+  <tr><td>hl.get_active_window()</td><td>HL.Window | nil</td><td>Currently focused window</td></tr>
+  <tr><td>hl.get_urgent_window()</td><td>HL.Window | nil</td><td>Window with urgent hint</td></tr>
+  <tr><td>hl.get_last_window()</td><td>HL.Window | nil</td><td>Previously focused window</td></tr>
+  <tr><td>hl.get_workspace_windows(ws)</td><td>{ HL.Window, ... }</td><td>All mapped windows on a workspace</td></tr>
+</table>
+</div>
+
+<h3>Workspaces</h3>
+<div class="fn">
+<table class="props">
+  <tr><th>Function</th><th>Returns</th><th>Description</th></tr>
+  <tr><td>hl.get_workspaces()</td><td>{ HL.Workspace, ... }</td><td>All non-inert workspaces</td></tr>
+  <tr><td>hl.get_workspace(selector)</td><td>HL.Workspace | nil</td><td>By id, name, or object</td></tr>
+  <tr><td>hl.get_active_workspace(monitor?)</td><td>HL.Workspace | nil</td><td>Active workspace (on given or focused monitor)</td></tr>
+  <tr><td>hl.get_active_special_workspace(monitor?)</td><td>HL.Workspace | nil</td><td>Active special (scratchpad) workspace</td></tr>
+  <tr><td>hl.get_last_workspace(monitor?)</td><td>HL.Workspace | nil</td><td>Previously active workspace</td></tr>
+</table>
+</div>
+
+<h3>Monitors</h3>
+<div class="fn">
+<table class="props">
+  <tr><th>Function</th><th>Returns</th><th>Description</th></tr>
+  <tr><td>hl.get_monitors()</td><td>{ HL.Monitor, ... }</td><td>All monitors</td></tr>
+  <tr><td>hl.get_monitor(selector)</td><td>HL.Monitor | nil</td><td>By name, id, or object</td></tr>
+  <tr><td>hl.get_active_monitor()</td><td>HL.Monitor</td><td>Focused monitor</td></tr>
+  <tr><td>hl.get_monitor_at(x, y) or ({ x, y })</td><td>HL.Monitor | nil</td><td>Monitor at pixel coordinates</td></tr>
+  <tr><td>hl.get_monitor_at_cursor()</td><td>HL.Monitor</td><td>Monitor under cursor</td></tr>
+</table>
+</div>
+
+<h3>Layers &amp; misc</h3>
+<div class="fn">
+<table class="props">
+  <tr><th>Function</th><th>Returns</th><th>Description</th></tr>
+  <tr><td>hl.get_layers({ filters? })</td><td>{ HL.LayerSurface, ... }</td><td>Filter by <code>monitor</code>, <code>namespace</code></td></tr>
+  <tr><td>hl.get_cursor_pos()</td><td>{ x, y }</td><td>Current cursor coordinates</td></tr>
+  <tr><td>hl.get_current_submap()</td><td>string</td><td>Active submap name</td></tr>
+  <tr><td>hl.version()</td><td>string</td><td>Hyprland version string</td></tr>
+  <tr><td>hl.get_loaded_plugins()</td><td>{ {name,author,version,description}, ... }</td><td>List of loaded plugins</td></tr>
+</table>
+</div>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s9">
+<h2><span class="section-num">9</span> Event System &mdash; <code>hl.on()</code>, <code>hl.off()</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.on(<span class="param">event_name</span>, <span class="param">callback</span>) &rarr; <span class="param">subscription</span></div>
+  <p>Subscribe to compositor events. Returns a subscription handle. Pass to <code>hl.off()</code> to unsubscribe.</p>
+</div>
+
+<div class="fn">
+  <div class="sig">hl.off(<span class="param">subscription</span>)</div>
+  <p>Unsubscribe from an event.</p>
+</div>
+
+<h3>Window events</h3>
+<table class="props">
+  <tr><th>Event</th><th>Callback data</th></tr>
+  <tr><td><code>"activeWindow"</code></td><td><code>windowAddress</code></td></tr>
+  <tr><td><code>"openWindow"</code></td><td><code>windowAddress, workspaceID, windowClass, windowTitle</code></td></tr>
+  <tr><td><code>"closeWindow"</code></td><td><code>windowAddress</code></td></tr>
+  <tr><td><code>"moveWindow"</code></td><td><code>windowAddress, workspaceID</code></td></tr>
+  <tr><td><code>"windowTitle"</code></td><td><code>windowAddress</code></td></tr>
+  <tr><td><code>"fullscreen"</code></td><td><code>windowAddress, fullscreenMode</code></td></tr>
+  <tr><td><code>"windowUrgency"</code></td><td><code>windowAddress</code></td></tr>
+  <tr><td><code>"windowGroup"</code></td><td><code>windowAddress</code></td></tr>
+</table>
+
+<h3>Workspace events</h3>
+<table class="props">
+  <tr><th>Event</th><th>Callback data</th></tr>
+  <tr><td><code>"workspace"</code></td><td><code>workspaceID, monitorName</code></td></tr>
+  <tr><td><code>"workspaceAdded"</code></td><td><code>workspaceID</code></td></tr>
+  <tr><td><code>"workspaceRemoved"</code></td><td><code>workspaceID</code></td></tr>
+  <tr><td><code>"moveWorkspace"</code></td><td><code>workspaceID, monitorName</code></td></tr>
+  <tr><td><code>"specialWorkspace"</code></td><td><code>workspaceID, monitorName</code></td></tr>
+  <tr><td><code>"workspaceMoved"</code></td><td><code>workspaceID, monitorName</code></td></tr>
+  <tr><td><code>"urgent"</code></td><td><code>workspaceID</code></td></tr>
+</table>
+
+<h3>Monitor events</h3>
+<table class="props">
+  <tr><th>Event</th><th>Callback data</th></tr>
+  <tr><td><code>"monitorAdded"</code></td><td><code>monitorName</code></td></tr>
+  <tr><td><code>"monitorRemoved"</code></td><td><code>monitorName</code></td></tr>
+</table>
+
+<h3>Input events</h3>
+<table class="props">
+  <tr><th>Event</th><th>Data</th></tr>
+  <tr><td><code>"activeLayout"</code></td><td><code>keyboardName, layoutName</code></td></tr>
+  <tr><td><code>"keyboardFocus"</code></td><td><code>windowAddress</code></td></tr>
+  <tr><td><code>"mouseButton"</code></td><td>See wiki</td></tr>
+  <tr><td><code>"mouseMove"</code></td><td>See wiki</td></tr>
+  <tr><td><code>"mouseAxis"</code></td><td>See wiki</td></tr>
+  <tr><td><code>"touchDown"</code>, <code>"touchUp"</code>, <code>"touchMove"</code></td><td>See wiki</td></tr>
+  <tr><td><code>"swipeBegin"</code>, <code>"swipeUpdate"</code>, <code>"swipeEnd"</code></td><td>See wiki</td></tr>
+  <tr><td><code>"pinchBegin"</code>, <code>"pinchUpdate"</code>, <code>"pinchEnd"</code></td><td>See wiki</td></tr>
+</table>
+
+<h3>Other events</h3>
+<table class="props">
+  <tr><th>Event</th><th>Data</th></tr>
+  <tr><td><code>"configReloaded"</code></td><td>(none)</td></tr>
+  <tr><td><code>"screencast"</code></td><td><code>state</code> (0/1), <code>painters</code> (array)</td></tr>
+  <tr><td><code>"screencastWindow"</code></td><td><code>state</code>, <code>windowAddress</code></td></tr>
+  <tr><td><code>"screencastMonitor"</code></td><td><code>state</code>, <code>monitorName</code></td></tr>
+  <tr><td><code>"layoutMessage"</code></td><td><code>message</code></td></tr>
+</table>
+
+<pre><code>hl.on(<span class="str">"openWindow"</span>, <span class="kw">function</span>(addr, wsID, cls, title)
+  hl.print(<span class="str">"Window opened:"</span>, cls, title)
+<span class="kw">end</span>)</code></pre>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s10">
+<h2><span class="section-num">10</span> Utility Functions</h2>
+
+<div class="fn">
+  <div class="sig">hl.print(...)</div>
+  <p>Log one or more values to the Hyprland log.</p>
+</div>
+
+<div class="fn">
+  <div class="sig">hl.exec_cmd(<span class="param">cmd</span>, <span class="param optional">rule_table</span>?)</div>
+  <p>Execute a shell command immediately (not as a dispatcher). Accepts an optional rule table for window rule effects.</p>
+</div>
+
+<div class="fn">
+  <div class="sig">hl.env(<span class="param">name</span>, <span class="param">value</span>, <span class="param optional">dbus</span>?)</div>
+  <p>Set an environment variable. If <code>dbus</code> is true, also update via D-Bus activation environment.</p>
+</div>
+
+<div class="fn">
+  <div class="sig">hl.dispatch(<span class="param">dispatcher_closure</span>)</div>
+  <p>Execute a dispatcher closure immediately (same as calling a bound key's action).</p>
+</div>
+
+<div class="fn">
+  <div class="sig">hl.load_plugin(<span class="param">path</span>)</div>
+  <p>Register a plugin to be loaded. Path is the absolute path to <code>.so</code> file.</p>
+</div>
+
+<pre><code>hl.env(<span class="str">"XCURSOR_SIZE"</span>, <span class="str">"24"</span>)
+hl.exec_cmd(<span class="str">"waybar"</span>)
+hl.dispatch(hl.dsp.window.close())</code></pre>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s11">
+<h2><span class="section-num">11</span> Notifications &mdash; <code>hl.notification.*</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.notification.create({ <span class="param">text</span>, <span class="param">duration</span>, <span class="param optional">icon</span>?, <span class="param optional">color</span>?, <span class="param optional">font_size</span>? }) &rarr; <span class="param">notification_handle</span></div>
+</div>
+
+<table class="props">
+  <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+  <tr><td>text</td><td>string</td><td>Notification message</td></tr>
+  <tr><td>duration / timeout / time</td><td>number (ms)</td><td>Display duration (required)</td></tr>
+  <tr><td>icon</td><td>string or int</td><td>Icon: <code>"warning"</code>, <code>"info"</code>, <code>"error"</code>, <code>"ok"</code>, <code>"hint"</code>, <code>"confused"</code>, <code>"question"</code>, <code>"none"</code>, or numeric</td></tr>
+  <tr><td>color</td><td>string or int</td><td>Background color (hex string, rgba, or numeric)</td></tr>
+  <tr><td>font_size</td><td>number</td><td>Font size (default 13)</td></tr>
+</table>
+
+<div class="fn">
+  <div class="sig">hl.notification.get() &rarr; { HL.Notification, ... }</div>
+  <p>Get list of current notifications.</p>
+</div>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s12">
+<h2><span class="section-num">12</span> Timers &mdash; <code>hl.timer()</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.timer(<span class="param">callback</span>, <span class="param">{ timeout, type }</span>) &rarr; <span class="param">timer_handle</span></div>
+</div>
+
+<table class="props">
+  <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+  <tr><td>callback</td><td>function</td><td>Function to call when timer fires</td></tr>
+  <tr><td>timeout</td><td>number (ms)</td><td>Interval/delay in milliseconds</td></tr>
+  <tr><td>type</td><td>string</td><td><code>"repeat"</code> or <code>"oneshot"</code></td></tr>
+</table>
+
+<pre><code><span class="kw">local</span> t = hl.timer(<span class="kw">function</span>() hl.print(<span class="str">"tick"</span>) <span class="kw">end</span>, { timeout = 1000, type = <span class="str">"repeat"</span> })
+<span class="cm">-- t:cancel() to stop</span></code></pre>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s13">
+<h2><span class="section-num">13</span> Animations &amp; Curves &mdash; <code>hl.curve()</code>, <code>hl.animation()</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.curve(<span class="param">name</span>, <span class="param">definition</span>)</div>
+  <p>Define a named animation curve (bezier or spring).</p>
+</div>
+
+<table class="props">
+  <tr><th>Type</th><th>Definition table</th></tr>
+  <tr><td>bezier</td><td><code>{ type = "bezier", points = { {x1,y1}, {x2,y2} } }</code></td></tr>
+  <tr><td>spring</td><td><code>{ type = "spring", mass = number, stiffness = number, dampening = number }</code></td></tr>
+</table>
+
+<div class="fn">
+  <div class="sig">hl.animation({ <span class="param">leaf</span>, <span class="param">enabled</span>, <span class="param">speed</span>, <span class="param">bezier</span>? / <span class="param">spring</span>?, <span class="param optional">style</span>? })</div>
+  <p>Configure an animation leaf. Known leaves: <code>"global"</code>, <code>"border"</code>, <code>"windows"</code>, <code>"windowsIn"</code>, <code>"windowsOut"</code>, <code>"fade"</code>, <code>"fadeIn"</code>, <code>"fadeOut"</code>, <code>"layers"</code>, <code>"layersIn"</code>, <code>"layersOut"</code>, <code>"workspaces"</code>, etc.</p>
+</div>
+
+<pre><code>hl.curve(<span class="str">"myBezier"</span>, { type = <span class="str">"bezier"</span>, points = { {<span class="str">0.23</span>, <span class="str">1</span>}, {<span class="str">0.32</span>, <span class="str">1</span>} } })
+hl.animation({ leaf = <span class="str">"windows"</span>, enabled = <span class="kw">true</span>, speed = 4.79, spring = <span class="str">"easy"</span> })</code></pre>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s14">
+<h2><span class="section-num">14</span> Devices &mdash; <code>hl.device()</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.device({ <span class="param">name</span>, ...fields })</div>
+  <p>Configure per-device input settings. The <code>name</code> field is the device name (from <code>hyprctl devices</code>).</p>
+</div>
+
+<table class="props">
+  <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+  <tr><td>name</td><td>string</td><td>Device name (required)</td></tr>
+  <tr><td>enabled</td><td>bool</td><td>Enable/disable device</td></tr>
+  <tr><td>sensitivity</td><td>float (-1 to 1)</td><td>Pointer sensitivity</td></tr>
+  <tr><td>accel_profile</td><td>string</td><td><code>"adaptive"</code> or <code>"flat"</code></td></tr>
+  <tr><td>natural_scroll</td><td>bool</td><td>Natural scrolling</td></tr>
+  <tr><td>tap_to_click</td><td>bool</td><td>Tap to click</td></tr>
+  <tr><td>tap_and_drag</td><td>bool</td><td>Tap and drag</td></tr>
+  <tr><td>drag_lock</td><td>int (0-2)</td><td>Drag lock behavior</td></tr>
+  <tr><td>left_handed</td><td>bool</td><td>Left-handed mode</td></tr>
+  <tr><td>scroll_method</td><td>string</td><td><code>"on_button_down"</code>, <code>"edge"</code>, <code>"two_finger"</code>, <code>"no_scroll"</code></td></tr>
+  <tr><td>scroll_button</td><td>int (0-300)</td><td>Scroll button</td></tr>
+  <tr><td>scroll_button_lock</td><td>bool</td><td>Lock scroll button</td></tr>
+  <tr><td>scroll_factor</td><td>float (0-100)</td><td>Scroll speed multiplier</td></tr>
+  <tr><td>clickfinger_behavior</td><td>bool</td><td>Clickfinger behavior</td></tr>
+  <tr><td>middle_button_emulation</td><td>bool</td><td>Middle button emulation</td></tr>
+  <tr><td>tap_button_map</td><td>string</td><td><code>"lrm"</code> or <code>"lmr"</code></td></tr>
+  <tr><td>disable_while_typing</td><td>bool</td><td>Disable touchpad while typing</td></tr>
+  <tr><td>numlock_by_default</td><td>bool</td><td>NumLock on by default</td></tr>
+  <tr><td>resolve_binds_by_sym</td><td>bool</td><td>Resolve binds by keysym</td></tr>
+  <tr><td>kb_layout</td><td>string</td><td>Keyboard layout</td></tr>
+  <tr><td>kb_variant</td><td>string</td><td>Keyboard variant</td></tr>
+  <tr><td>kb_options</td><td>string</td><td>Keyboard options</td></tr>
+  <tr><td>kb_rules</td><td>string</td><td>Keyboard rules</td></tr>
+  <tr><td>kb_model</td><td>string</td><td>Keyboard model</td></tr>
+  <tr><td>kb_file</td><td>string</td><td>Custom keymap file path</td></tr>
+  <tr><td>repeat_rate</td><td>int (0-200)</td><td>Key repeat rate</td></tr>
+  <tr><td>repeat_delay</td><td>int (0-2000)</td><td>Key repeat delay (ms)</td></tr>
+  <tr><td>rotation</td><td>int (0-359)</td><td>Tablet rotation</td></tr>
+  <tr><td>transform</td><td>int</td><td>Tablet transform</td></tr>
+  <tr><td>output</td><td>string</td><td>Tablet output mapping</td></tr>
+  <tr><td>region_position</td><td>vec2</td><td>Tablet region position</td></tr>
+  <tr><td>region_size</td><td>vec2</td><td>Tablet region size</td></tr>
+  <tr><td>relative_input</td><td>bool</td><td>Relative input mode</td></tr>
+  <tr><td>flip_x / flip_y</td><td>bool</td><td>Flip tablet axis</td></tr>
+  <tr><td>tags</td><td>string</td><td>Device tags</td></tr>
+  <tr><td>keybinds</td><td>bool</td><td>Enable keybinds on this device</td></tr>
+  <tr><td>share_states</td><td>int (0-2)</td><td>LED state sharing</td></tr>
+</table>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s15">
+<h2><span class="section-num">15</span> Permissions &mdash; <code>hl.permission()</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.permission({ <span class="param">binary</span>, <span class="param">type</span>, <span class="param">mode</span> })</div>
+  <p>Set a permission rule for a binary. Requires <code>hl.config({ ecosystem = { enforce_permissions = true } })</code> to be active.</p>
+</div>
+
+<table class="props">
+  <tr><th>Field</th><th>Values</th></tr>
+  <tr><td>binary</td><td>Regex path to binary, e.g. <code>"/usr/bin/grim"</code>, <code>"/usr/(bin|libexec)/xdg-desktop-portal-hyprland"</code></td></tr>
+  <tr><td>type</td><td><code>"screencopy"</code>, <code>"cursorpos"</code>, <code>"plugin"</code>, <code>"keyboard"</code></td></tr>
+  <tr><td>mode</td><td><code>"allow"</code>, <code>"deny"</code>, <code>"ask"</code></td></tr>
+</table>
+
+<p class="note">Permissions are only applied on first launch. Changes require a restart.</p>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s16">
+<h2><span class="section-num">16</span> Gestures &mdash; <code>hl.gesture()</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.gesture({ <span class="param">fingers</span>, <span class="param">direction</span>, <span class="param">action</span>, ... })</div>
+</div>
+
+<table class="props">
+  <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+  <tr><td>fingers</td><td>int (2-9)</td><td>Number of fingers</td></tr>
+  <tr><td>direction</td><td>string</td><td><code>"horizontal"</code>, <code>"vertical"</code>, <code>"left"</code>, <code>"right"</code>, <code>"up"</code>, <code>"down"</code>, <code>"any"</code></td></tr>
+  <tr><td>action</td><td>string or function</td><td><code>"workspace"</code>, <code>"resize"</code>, <code>"move"</code>, <code>"special"</code>, <code>"close"</code>, <code>"float"</code>, <code>"fullscreen"</code>, <code>"cursor_zoom"</code>, <code>"scroll_move"</code>, <code>"unset"</code>, or a Lua function</td></tr>
+  <tr><td>mods</td><td>string</td><td>Modifier combination like <code>"SUPER"</code></td></tr>
+  <tr><td>scale</td><td>float (0.1-10)</td><td>Delta scale (default 1.0)</td></tr>
+  <tr><td>disable_inhibit</td><td>bool</td><td>Disable inhibit for this gesture</td></tr>
+</table>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s17">
+<h2><span class="section-num">17</span> Plugins &mdash; <code>hl.plugin.load()</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.plugin.load(<span class="param">path</span>)</div>
+  <p>Register a plugin to load. The path is an absolute path to the <code>.so</code> file.</p>
+</div>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s18">
+<h2><span class="section-num">18</span> Custom Layouts &mdash; <code>hl.layout.*</code></h2>
+
+<div class="fn">
+  <div class="sig">hl.layout.register(<span class="param">name</span>, <span class="param">methods</span>)</div>
+  <p>Register a custom tiling layout. The methods table must implement layout lifecycle callbacks.</p>
+</div>
+
+<table class="props">
+  <tr><th>Required method</th><th>Signature</th></tr>
+  <tr><td>onWindowAdded</td><td><code>function(window)</code></td></tr>
+  <tr><td>onWindowRemoved</td><td><code>function(window)</code></td></tr>
+  <tr><td>onWindowSwapped</td><td><code>function(w1, w2)</code></td></tr>
+  <tr><td>onWindowMoved</td><td><code>function(window, fromWorkspace)</code></td></tr>
+  <tr><td>requestResize</td><td><code>function(window, edge, delta)</code></td></tr>
+  <tr><td>requestMove</td><td><code>function(window, x, y)</code></td></tr>
+  <tr><td>calculateWindowSize</td><td><code>function(window)</code></td></tr>
+  <tr><td>recalculate</td><td><code>function()</code></td></tr>
+  <tr><td>resizeActiveWindow</td><td><code>function(delta, edge)</code></td></tr>
+</table>
+
+<div class="fn">
+  <div class="sig">hl.layout.list() &rarr; { string, ... }</div>
+  <p>List registered layout names.</p>
+</div>
+
+<div class="fn">
+  <div class="sig">hl.layout.get(<span class="param">name</span>) &rarr; <span class="param">layout</span></div>
+  <p>Get a registered layout by name.</p>
+</div>
+</section>
+
+<!-- ======================================================================== -->
+<section id="s19">
+<h2><span class="section-num">19</span> Object Types</h2>
+
+<h3>HL.Window</h3>
+<table class="props">
+  <tr><th>Property</th><th>Type</th><th>Description</th></tr>
+  <tr><td>address</td><td>string</td><td>Memory address (<code>"0x..."</code>)</td></tr>
+  <tr><td>mapped</td><td>bool</td><td>Is mapped</td></tr>
+  <tr><td>hidden</td><td>bool</td><td>Is hidden</td></tr>
+  <tr><td>visible</td><td>bool</td><td>Is visible</td></tr>
+  <tr><td>accepts_input</td><td>bool</td><td>Accepts keyboard input</td></tr>
+  <tr><td>at</td><td>{ x, y }</td><td>Position on screen</td></tr>
+  <tr><td>size</td><td>{ x, y }</td><td>Width and height</td></tr>
+  <tr><td>workspace</td><td>HL.Workspace</td><td>Workspace containing the window</td></tr>
+  <tr><td>floating</td><td>bool</td><td>Is floating</td></tr>
+  <tr><td>monitor</td><td>HL.Monitor</td><td>Monitor the window is on</td></tr>
+  <tr><td>class</td><td>string</td><td>Window class</td></tr>
+  <tr><td>title</td><td>string</td><td>Window title</td></tr>
+  <tr><td>initial_class</td><td>string</td><td>Class at creation</td></tr>
+  <tr><td>initial_title</td><td>string</td><td>Title at creation</td></tr>
+  <tr><td>pid</td><td>int</td><td>Process ID</td></tr>
+  <tr><td>xwayland</td><td>bool</td><td>Is XWayland window</td></tr>
+  <tr><td>pinned</td><td>bool</td><td>Is pinned to workspace</td></tr>
+  <tr><td>fullscreen</td><td>int</td><td>Internal fullscreen mode (0/1/2)</td></tr>
+  <tr><td>fullscreen_client</td><td>int</td><td>Client fullscreen mode (0/1/2)</td></tr>
+  <tr><td>over_fullscreen</td><td>bool</td><td>Created over fullscreen</td></tr>
+  <tr><td>group</td><td>HL.Group</td><td>Group object if in a group</td></tr>
+  <tr><td>tags</td><td>{ string, ... }</td><td>List of tags</td></tr>
+  <tr><td>swallowing</td><td>HL.Window</td><td>Swallowed window</td></tr>
+  <tr><td>focus_history_id</td><td>int</td><td>Position in focus history</td></tr>
+  <tr><td>inhibiting_idle</td><td>bool</td><td>Is inhibiting idle</td></tr>
+  <tr><td>xdg_tag</td><td>string</td><td>XDG tag</td></tr>
+  <tr><td>xdg_description</td><td>string</td><td>XDG description</td></tr>
+  <tr><td>content_type</td><td>string</td><td>Content type</td></tr>
+  <tr><td>stable_id</td><td>int</td><td>Stable window ID</td></tr>
+  <tr><td>active</td><td>bool</td><td>Is focused</td></tr>
+  <tr><td>layout</td><td>{ name, is_master?, perc_master?, perc_size?, ... }</td><td>Layout-specific data</td></tr>
+</table>
+
+<h3>HL.Workspace</h3>
+<table class="props">
+  <tr><th>Property</th><th>Type</th><th>Description</th></tr>
+  <tr><td>id</td><td>int</td><td>Workspace ID</td></tr>
+  <tr><td>name</td><td>string</td><td>Workspace name</td></tr>
+  <tr><td>monitor</td><td>HL.Monitor</td><td>Monitor the workspace is on</td></tr>
+  <tr><td>windows</td><td>int</td><td>Number of windows</td></tr>
+  <tr><td>visible</td><td>bool</td><td>Is visible</td></tr>
+  <tr><td>special</td><td>bool</td><td>Is special (scratchpad) workspace</td></tr>
+  <tr><td>active</td><td>bool</td><td>Is active on its monitor</td></tr>
+  <tr><td>has_urgent</td><td>bool</td><td>Has urgent window</td></tr>
+  <tr><td>fullscreen_mode</td><td>int</td><td>Fullscreen mode</td></tr>
+  <tr><td>has_fullscreen</td><td>bool</td><td>Has fullscreen window</td></tr>
+  <tr><td>is_persistent</td><td>bool</td><td>Is persistent workspace</td></tr>
+  <tr><td>is_empty</td><td>bool</td><td>Has no windows</td></tr>
+  <tr><td>config_name</td><td>string</td><td>Config-specified name</td></tr>
+  <tr><td>tiled_layout</td><td>string</td><td>Active tiled layout name</td></tr>
+  <tr><td>last_window</td><td>HL.Window</td><td>Last focused window</td></tr>
+  <tr><td>fullscreen_window</td><td>HL.Window</td><td>Fullscreen window (if any)</td></tr>
+  <tr><td>groups</td><td>int</td><td>Number of groups</td></tr>
+  <tr><td>get_windows()</td><td>{ HL.Window, ... }</td><td>Get all windows on this workspace</td></tr>
+  <tr><td>get_groups()</td><td>{ HL.Group, ... }</td><td>Get all groups on this workspace</td></tr>
+</table>
+
+<h3>HL.Monitor</h3>
+<table class="props">
+  <tr><th>Property</th><th>Type</th><th>Description</th></tr>
+  <tr><td>id</td><td>int</td><td>Monitor ID</td></tr>
+  <tr><td>name</td><td>string</td><td>Monitor name (e.g. <code>"DP-1"</code>)</td></tr>
+  <tr><td>description</td><td>string</td><td>Short description</td></tr>
+  <tr><td>serial</td><td>string</td><td>Serial number</td></tr>
+  <tr><td>width</td><td>int</td><td>Pixel width</td></tr>
+  <tr><td>height</td><td>int</td><td>Pixel height</td></tr>
+  <tr><td>physical_width</td><td>int</td><td>Physical width (mm)</td></tr>
+  <tr><td>physical_height</td><td>int</td><td>Physical height (mm)</td></tr>
+  <tr><td>refresh_rate</td><td>number</td><td>Refresh rate (Hz)</td></tr>
+  <tr><td>x</td><td>int</td><td>Position X</td></tr>
+  <tr><td>y</td><td>int</td><td>Position Y</td></tr>
+  <tr><td>position</td><td>{ x, y }</td><td>Position as table</td></tr>
+  <tr><td>size</td><td>{ width, height }</td><td>Size as table</td></tr>
+  <tr><td>scale</td><td>number</td><td>Scale factor</td></tr>
+  <tr><td>transform</td><td>int</td><td>Transform (0-7)</td></tr>
+  <tr><td>active_workspace</td><td>HL.Workspace</td><td>Active workspace</td></tr>
+  <tr><td>active_special_workspace</td><td>HL.Workspace</td><td>Active special workspace (or nil)</td></tr>
+  <tr><td>dpms_status</td><td>bool</td><td>DPMS state</td></tr>
+  <tr><td>vrr_active</td><td>bool</td><td>VRR active</td></tr>
+  <tr><td>is_mirror</td><td>bool</td><td>Is mirroring another output</td></tr>
+  <tr><td>mirrors</td><td>{ HL.Monitor, ... }</td><td>Mirroring outputs</td></tr>
+  <tr><td>available_modes</td><td>{ {width,height,refresh_rate,preferred}, ... }</td><td>Available video modes</td></tr>
+  <tr><td>focused</td><td>bool</td><td>Is focused</td></tr>
+  <tr><td>cm</td><td>string</td><td>Color management mode</td></tr>
+  <tr><td>reserved</td><td>{ top, right, bottom, left }</td><td>Reserved area (for bars)</td></tr>
+  <tr><td>set_workspace({ workspace })</td><td>&mdash;</td><td>Switch to a workspace on this monitor</td></tr>
+  <tr><td>set_special_workspace({ workspace? })</td><td>&mdash;</td><td>Toggle special workspace</td></tr>
+</table>
+
+<h3>HL.LayerSurface</h3>
+<table class="props">
+  <tr><th>Property</th><th>Type</th><th>Description</th></tr>
+  <tr><td>address</td><td>string</td><td>Memory address</td></tr>
+  <tr><td>x</td><td>int</td><td>Position X</td></tr>
+  <tr><td>y</td><td>int</td><td>Position Y</td></tr>
+  <tr><td>w</td><td>int</td><td>Width</td></tr>
+  <tr><td>h</td><td>int</td><td>Height</td></tr>
+  <tr><td>namespace</td><td>string</td><td>Layer namespace</td></tr>
+  <tr><td>pid</td><td>int</td><td>Process ID</td></tr>
+  <tr><td>monitor</td><td>HL.Monitor</td><td>Monitor</td></tr>
+  <tr><td>mapped</td><td>bool</td><td>Is mapped</td></tr>
+  <tr><td>layer</td><td>int</td><td>Layer index</td></tr>
+  <tr><td>interactivity</td><td>int</td><td>Interactivity level</td></tr>
+  <tr><td>above_fullscreen</td><td>bool</td><td>Renders above fullscreen windows</td></tr>
+</table>
+</section>
+
+<footer>
+  Generated from the Hyprland source tree. Hyprland is &copy; its contributors.
+</footer>
+
+</div>
+</body>
+</html>
