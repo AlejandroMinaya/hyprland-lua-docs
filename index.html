@@ -209,6 +209,7 @@ hl.config({
   <tr><td>fullscreen</td><td>bool</td><td>Force fullscreen</td></tr>
   <tr><td>maximize</td><td>bool</td><td>Force maximize</td></tr>
   <tr><td>center</td><td>bool</td><td>Center on screen</td></tr>
+  <tr><td>content</td><td>string</td><td>Content type override</td></tr>
   <tr><td>pseudo</td><td>bool</td><td>Pseudo-tile</td></tr>
   <tr><td>pin</td><td>bool</td><td>Pin window</td></tr>
   <tr><td>no_initial_focus</td><td>bool</td><td>Don't focus on open</td></tr>
@@ -224,6 +225,7 @@ hl.config({
   <tr><td>rounding_power</td><td>float (1-10)</td><td>Rounding power</td></tr>
   <tr><td>scroll_mouse</td><td>float (0.01-10)</td><td>Mouse scroll speed multiplier</td></tr>
   <tr><td>scroll_touchpad</td><td>float (0.01-10)</td><td>Touchpad scroll speed multiplier</td></tr>
+  <tr><td>scrolling_width</td><td>float</td><td>Scrolling layout window width</td></tr>
   <tr><td>animation</td><td>string</td><td>Animation style name</td></tr>
   <tr><td>idle_inhibit</td><td>string</td><td><code>"none"</code>, <code>"always"</code>, <code>"focus"</code>, <code>"fullscreen"</code></td></tr>
   <tr><td>opacity</td><td>string</td><td>Opacity override e.g. <code>"0.9"</code> or <code>"0.9 0.8"</code></td></tr>
@@ -240,6 +242,7 @@ hl.config({
   <tr><td>nearest_neighbor</td><td>bool</td><td>Nearest-neighbor scaling</td></tr>
   <tr><td>no_anim</td><td>bool</td><td>Disable animations</td></tr>
   <tr><td>no_blur</td><td>bool</td><td>Disable blur</td></tr>
+  <tr><td>no_close_for</td><td>int</td><td>No close for N seconds</td></tr>
   <tr><td>no_dim</td><td>bool</td><td>Disable dim</td></tr>
   <tr><td>no_focus</td><td>bool</td><td>Don't focus automatically</td></tr>
   <tr><td>no_follow_mouse</td><td>bool</td><td>Don't follow mouse focus</td></tr>
@@ -466,6 +469,7 @@ hl.bind(<span class="str">"SUPER+R"</span>, hl.dsp.submap(<span class="str">"res
   <tr><td>hl.dsp.workspace.rename({ workspace, name? })</td><td>Rename workspace</td></tr>
   <tr><td>hl.dsp.workspace.move({ workspace?, monitor })</td><td>Move workspace (or current) to a monitor</td></tr>
   <tr><td>hl.dsp.workspace.swap_monitors({ monitor1, monitor2 })</td><td>Swap active workspaces between monitors</td></tr>
+  <tr><td>hl.dsp.workspace.change_id({ workspace, id })</td><td>Change workspace ID</td></tr>
   <tr><td>hl.dsp.workspace.toggle_special(name?)</td><td>Toggle special (scratchpad) workspace</td></tr>
 </table>
 </div>
@@ -554,71 +558,77 @@ hl.bind(<span class="str">"SUPER+R"</span>, hl.dsp.submap(<span class="str">"res
 
 <div class="fn">
   <div class="sig">hl.on(<span class="param">event_name</span>, <span class="param">callback</span>) &rarr; <span class="param">subscription</span></div>
-  <p>Subscribe to compositor events. Returns a subscription handle. Pass to <code>hl.off()</code> to unsubscribe.</p>
+  <p>Subscribe to compositor events. Returns a subscription handle with methods <code>:remove()</code> and <code>:is_active()</code>. Pass to <code>hl.off()</code> to unsubscribe.</p>
 </div>
 
 <div class="fn">
   <div class="sig">hl.off(<span class="param">subscription</span>)</div>
-  <p>Unsubscribe from an event.</p>
+  <p>Unsubscribe from an event. Equivalent to <code>subscription:remove()</code>.</p>
 </div>
 
 <h3>Window events</h3>
 <table class="props">
-  <tr><th>Event</th><th>Callback data</th></tr>
-  <tr><td><code>"activeWindow"</code></td><td><code>windowAddress</code></td></tr>
-  <tr><td><code>"openWindow"</code></td><td><code>windowAddress, workspaceID, windowClass, windowTitle</code></td></tr>
-  <tr><td><code>"closeWindow"</code></td><td><code>windowAddress</code></td></tr>
-  <tr><td><code>"moveWindow"</code></td><td><code>windowAddress, workspaceID</code></td></tr>
-  <tr><td><code>"windowTitle"</code></td><td><code>windowAddress</code></td></tr>
-  <tr><td><code>"fullscreen"</code></td><td><code>windowAddress, fullscreenMode</code></td></tr>
-  <tr><td><code>"windowUrgency"</code></td><td><code>windowAddress</code></td></tr>
-  <tr><td><code>"windowGroup"</code></td><td><code>windowAddress</code></td></tr>
+  <tr><th>Event</th><th>Callback arguments</th></tr>
+  <tr><td><code>"window.open"</code></td><td>HL.Window</td></tr>
+  <tr><td><code>"window.open_early"</code></td><td>HL.Window</td></tr>
+  <tr><td><code>"window.close"</code></td><td>HL.Window</td></tr>
+  <tr><td><code>"window.destroy"</code></td><td>HL.Window</td></tr>
+  <tr><td><code>"window.kill"</code></td><td>HL.Window</td></tr>
+  <tr><td><code>"window.active"</code></td><td>HL.Window, int focusReason</td></tr>
+  <tr><td><code>"window.urgent"</code></td><td>HL.Window</td></tr>
+  <tr><td><code>"window.title"</code></td><td>HL.Window</td></tr>
+  <tr><td><code>"window.class"</code></td><td>HL.Window</td></tr>
+  <tr><td><code>"window.pin"</code></td><td>HL.Window</td></tr>
+  <tr><td><code>"window.fullscreen"</code></td><td>HL.Window</td></tr>
+  <tr><td><code>"window.update_rules"</code></td><td>HL.Window</td></tr>
+  <tr><td><code>"window.move_to_workspace"</code></td><td>HL.Window, HL.Workspace</td></tr>
+</table>
+
+<h3>Layer events</h3>
+<table class="props">
+  <tr><th>Event</th><th>Callback arguments</th></tr>
+  <tr><td><code>"layer.opened"</code></td><td>HL.LayerSurface</td></tr>
+  <tr><td><code>"layer.closed"</code></td><td>HL.LayerSurface</td></tr>
 </table>
 
 <h3>Workspace events</h3>
 <table class="props">
-  <tr><th>Event</th><th>Callback data</th></tr>
-  <tr><td><code>"workspace"</code></td><td><code>workspaceID, monitorName</code></td></tr>
-  <tr><td><code>"workspaceAdded"</code></td><td><code>workspaceID</code></td></tr>
-  <tr><td><code>"workspaceRemoved"</code></td><td><code>workspaceID</code></td></tr>
-  <tr><td><code>"moveWorkspace"</code></td><td><code>workspaceID, monitorName</code></td></tr>
-  <tr><td><code>"specialWorkspace"</code></td><td><code>workspaceID, monitorName</code></td></tr>
-  <tr><td><code>"workspaceMoved"</code></td><td><code>workspaceID, monitorName</code></td></tr>
-  <tr><td><code>"urgent"</code></td><td><code>workspaceID</code></td></tr>
+  <tr><th>Event</th><th>Callback arguments</th></tr>
+  <tr><td><code>"workspace.active"</code></td><td>HL.Workspace</td></tr>
+  <tr><td><code>"workspace.special_active"</code></td><td>HL.Workspace, HL.Monitor</td></tr>
+  <tr><td><code>"workspace.created"</code></td><td>HL.Workspace</td></tr>
+  <tr><td><code>"workspace.removed"</code></td><td>HL.Workspace</td></tr>
+  <tr><td><code>"workspace.move_to_monitor"</code></td><td>HL.Workspace, HL.Monitor</td></tr>
 </table>
 
 <h3>Monitor events</h3>
 <table class="props">
-  <tr><th>Event</th><th>Callback data</th></tr>
-  <tr><td><code>"monitorAdded"</code></td><td><code>monitorName</code></td></tr>
-  <tr><td><code>"monitorRemoved"</code></td><td><code>monitorName</code></td></tr>
+  <tr><th>Event</th><th>Callback arguments</th></tr>
+  <tr><td><code>"monitor.added"</code></td><td>HL.Monitor</td></tr>
+  <tr><td><code>"monitor.removed"</code></td><td>HL.Monitor</td></tr>
+  <tr><td><code>"monitor.focused"</code></td><td>HL.Monitor</td></tr>
+  <tr><td><code>"monitor.layout_changed"</code></td><td>(none)</td></tr>
 </table>
 
-<h3>Input events</h3>
+<h3>Config events</h3>
 <table class="props">
-  <tr><th>Event</th><th>Data</th></tr>
-  <tr><td><code>"activeLayout"</code></td><td><code>keyboardName, layoutName</code></td></tr>
-  <tr><td><code>"keyboardFocus"</code></td><td><code>windowAddress</code></td></tr>
-  <tr><td><code>"mouseButton"</code></td><td>See wiki</td></tr>
-  <tr><td><code>"mouseMove"</code></td><td>See wiki</td></tr>
-  <tr><td><code>"mouseAxis"</code></td><td>See wiki</td></tr>
-  <tr><td><code>"touchDown"</code>, <code>"touchUp"</code>, <code>"touchMove"</code></td><td>See wiki</td></tr>
-  <tr><td><code>"swipeBegin"</code>, <code>"swipeUpdate"</code>, <code>"swipeEnd"</code></td><td>See wiki</td></tr>
-  <tr><td><code>"pinchBegin"</code>, <code>"pinchUpdate"</code>, <code>"pinchEnd"</code></td><td>See wiki</td></tr>
+  <tr><th>Event</th><th>Callback arguments</th></tr>
+  <tr><td><code>"config.reloaded"</code></td><td>(none)</td></tr>
+  <tr><td><code>"config.props_refreshed"</code></td><td>bool (was scheduled?)</td></tr>
 </table>
 
-<h3>Other events</h3>
+<h3>Input &amp; misc events</h3>
 <table class="props">
-  <tr><th>Event</th><th>Data</th></tr>
-  <tr><td><code>"configReloaded"</code></td><td>(none)</td></tr>
-  <tr><td><code>"screencast"</code></td><td><code>state</code> (0/1), <code>painters</code> (array)</td></tr>
-  <tr><td><code>"screencastWindow"</code></td><td><code>state</code>, <code>windowAddress</code></td></tr>
-  <tr><td><code>"screencastMonitor"</code></td><td><code>state</code>, <code>monitorName</code></td></tr>
-  <tr><td><code>"layoutMessage"</code></td><td><code>message</code></td></tr>
+  <tr><th>Event</th><th>Callback arguments</th></tr>
+  <tr><td><code>"keybinds.submap"</code></td><td>string submapName</td></tr>
+  <tr><td><code>"screenshare.state"</code></td><td>bool state, int type, string name</td></tr>
+  <tr><td><code>"hyprland.start"</code></td><td>(none)</td></tr>
+  <tr><td><code>"hyprland.shutdown"</code></td><td>(none)</td></tr>
+  <tr><td><code>"input.keyboard.key"</code></td><td>int keycode, int timeMs, int state</td></tr>
 </table>
 
-<pre><code>hl.on(<span class="str">"openWindow"</span>, <span class="kw">function</span>(addr, wsID, cls, title)
-  hl.print(<span class="str">"Window opened:"</span>, cls, title)
+<pre><code>hl.on(<span class="str">"window.open"</span>, <span class="kw">function</span>(win)
+  hl.print(<span class="str">"Window opened:"</span>, win.class, win.title)
 <span class="kw">end</span>)</code></pre>
 </section>
 
@@ -651,6 +661,21 @@ hl.bind(<span class="str">"SUPER+R"</span>, hl.dsp.submap(<span class="str">"res
   <p>Register a plugin to be loaded. Path is the absolute path to <code>.so</code> file.</p>
 </div>
 
+<div class="fn">
+  <div class="sig">hl.clear_crashed_lockscreen()</div>
+  <p>Clear a crashed lockscreen session.</p>
+</div>
+
+<div class="fn">
+  <div class="sig">hl.exec_scheduled_prop_refresh_immediately()</div>
+  <p>Execute any pending scheduled property refresh immediately.</p>
+</div>
+
+<div class="fn">
+  <div class="sig">hl.is_key_down(<span class="param">keycode_or_keysym</span>) &rarr; <span class="param">bool</span></div>
+  <p>Check if a key is currently pressed. Accepts a keycode (int) or keysym (string).</p>
+</div>
+
 <pre><code>hl.env(<span class="str">"XCURSOR_SIZE"</span>, <span class="str">"24"</span>)
 hl.exec_cmd(<span class="str">"waybar"</span>)
 hl.dispatch(hl.dsp.window.close())</code></pre>
@@ -677,6 +702,30 @@ hl.dispatch(hl.dsp.window.close())</code></pre>
   <div class="sig">hl.notification.get() &rarr; { HL.Notification, ... }</div>
   <p>Get list of current notifications.</p>
 </div>
+
+<h3>HL.Notification methods</h3>
+<p>The object returned by <code>hl.notification.create()</code> and <code>hl.notification.get()</code> has the following methods:</p>
+<table class="props">
+  <tr><th>Method</th><th>Description</th></tr>
+  <tr><td>pause()</td><td>Pause the notification (keeps it visible indefinitely)</td></tr>
+  <tr><td>resume()</td><td>Resume the notification timer</td></tr>
+  <tr><td>set_paused(bool)</td><td>Set paused state</td></tr>
+  <tr><td>is_paused() &rarr; bool</td><td>Check if paused</td></tr>
+  <tr><td>set_text(text)</td><td>Set notification text</td></tr>
+  <tr><td>set_timeout(ms)</td><td>Set display timeout in ms</td></tr>
+  <tr><td>set_color(color)</td><td>Set background color (string or number)</td></tr>
+  <tr><td>set_icon(icon)</td><td>Set icon (name or number)</td></tr>
+  <tr><td>set_font_size(size)</td><td>Set font size</td></tr>
+  <tr><td>dismiss()</td><td>Dismiss the notification immediately</td></tr>
+  <tr><td>get_text() &rarr; string</td><td>Get notification text</td></tr>
+  <tr><td>get_timeout() &rarr; number</td><td>Get timeout in ms</td></tr>
+  <tr><td>get_color() &rarr; int</td><td>Get color as hex integer</td></tr>
+  <tr><td>get_icon() &rarr; int</td><td>Get icon ID</td></tr>
+  <tr><td>get_font_size() &rarr; number</td><td>Get font size</td></tr>
+  <tr><td>get_elapsed() &rarr; number</td><td>Get elapsed time since last change (ms)</td></tr>
+  <tr><td>get_elapsed_since_creation() &rarr; number</td><td>Get elapsed time since creation (ms)</td></tr>
+  <tr><td>is_alive() &rarr; bool</td><td>Check if notification still exists</td></tr>
+</table>
 </section>
 
 <!-- ======================================================================== -->
@@ -770,6 +819,12 @@ hl.animation({ leaf = <span class="str">"windows"</span>, enabled = <span class=
   <tr><td>tags</td><td>string</td><td>Device tags</td></tr>
   <tr><td>keybinds</td><td>bool</td><td>Enable keybinds on this device</td></tr>
   <tr><td>share_states</td><td>int (0-2)</td><td>LED state sharing</td></tr>
+  <tr><td>scroll_points</td><td>string</td><td>Scroll point configuration</td></tr>
+  <tr><td>absolute_region_position</td><td>bool</td><td>Use absolute region position for tablet</td></tr>
+  <tr><td>active_area_position</td><td>vec2</td><td>Tablet active area position</td></tr>
+  <tr><td>active_area_size</td><td>vec2</td><td>Tablet active area size</td></tr>
+  <tr><td>drag_3fg</td><td>int (0-2)</td><td>Three-finger drag behavior</td></tr>
+  <tr><td>release_pressed_on_close</td><td>bool</td><td>Release pressed keys when virtual keyboard closes</td></tr>
 </table>
 </section>
 
@@ -778,8 +833,9 @@ hl.animation({ leaf = <span class="str">"windows"</span>, enabled = <span class=
 <h2><span class="section-num">15</span> Permissions &mdash; <code>hl.permission()</code></h2>
 
 <div class="fn">
+  <div class="sig">hl.permission(<span class="param">binary</span>, <span class="param">type</span>, <span class="param">mode</span>)</div>
   <div class="sig">hl.permission({ <span class="param">binary</span>, <span class="param">type</span>, <span class="param">mode</span> })</div>
-  <p>Set a permission rule for a binary. Requires <code>hl.config({ ecosystem = { enforce_permissions = true } })</code> to be active.</p>
+  <p>Set a permission rule for a binary. Accepts positional args or a table with <code>binary</code>, <code>type</code>, <code>mode</code> fields. Requires <code>hl.config({ ecosystem = { enforce_permissions = true } })</code> to be active.</p>
 </div>
 
 <table class="props">
@@ -804,10 +860,13 @@ hl.animation({ leaf = <span class="str">"windows"</span>, enabled = <span class=
   <tr><th>Field</th><th>Type</th><th>Description</th></tr>
   <tr><td>fingers</td><td>int (2-9)</td><td>Number of fingers</td></tr>
   <tr><td>direction</td><td>string</td><td><code>"horizontal"</code>, <code>"vertical"</code>, <code>"left"</code>, <code>"right"</code>, <code>"up"</code>, <code>"down"</code>, <code>"any"</code></td></tr>
-  <tr><td>action</td><td>string or function</td><td><code>"workspace"</code>, <code>"resize"</code>, <code>"move"</code>, <code>"special"</code>, <code>"close"</code>, <code>"float"</code>, <code>"fullscreen"</code>, <code>"cursor_zoom"</code>, <code>"scroll_move"</code>, <code>"unset"</code>, or a Lua function</td></tr>
+  <tr><td>action</td><td>string or function</td><td><code>"workspace"</code>, <code>"resize"</code>, <code>"move"</code>, <code>"special"</code>, <code>"close"</code>, <code>"float"</code>, <code>"fullscreen"</code>, <code>"cursor_zoom"</code> / <code>"cursorZoom"</code>, <code>"scroll_move"</code>, <code>"unset"</code>, or a Lua function</td></tr>
   <tr><td>mods</td><td>string</td><td>Modifier combination like <code>"SUPER"</code></td></tr>
   <tr><td>scale</td><td>float (0.1-10)</td><td>Delta scale (default 1.0)</td></tr>
   <tr><td>disable_inhibit</td><td>bool</td><td>Disable inhibit for this gesture</td></tr>
+  <tr><td>zoom_level</td><td>string</td><td>Zoom level for <code>cursor_zoom</code> action</td></tr>
+  <tr><td>workspace_name</td><td>string</td><td>Workspace name for <code>special</code> action</td></tr>
+  <tr><td>mode</td><td>string</td><td>Mode for <code>float</code> / <code>fullscreen</code> / <code>cursor_zoom</code> actions</td></tr>
 </table>
 </section>
 
@@ -965,6 +1024,17 @@ hl.animation({ leaf = <span class="str">"windows"</span>, enabled = <span class=
   <tr><td>layer</td><td>int</td><td>Layer index</td></tr>
   <tr><td>interactivity</td><td>int</td><td>Interactivity level</td></tr>
   <tr><td>above_fullscreen</td><td>bool</td><td>Renders above fullscreen windows</td></tr>
+</table>
+
+<h3>HL.Group</h3>
+<table class="props">
+  <tr><th>Property</th><th>Type</th><th>Description</th></tr>
+  <tr><td>locked</td><td>bool</td><td>Group is locked (can't add/remove members)</td></tr>
+  <tr><td>denied</td><td>bool</td><td>Group is denied (members can't be focused)</td></tr>
+  <tr><td>size</td><td>int</td><td>Number of members</td></tr>
+  <tr><td>current_index</td><td>int</td><td>Index of the active member (1-based)</td></tr>
+  <tr><td>current</td><td>HL.Window</td><td>Currently focused member window</td></tr>
+  <tr><td>members</td><td>{ HL.Window, ... }</td><td>All member windows</td></tr>
 </table>
 </section>
 
